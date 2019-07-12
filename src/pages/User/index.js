@@ -29,17 +29,31 @@ export default class User extends Component {
     }).isRequired,
   };
 
-  state = { starred: [], loading: true };
+  state = { starred: [], loading: true, page: 1 };
 
   async componentDidMount() {
+    this.setState({ loading: true });
+
+    const response = await this.loadRepos();
+
+    this.setState({ starred: response.data, loading: false });
+  }
+
+  loadMore = async () => {
+    const { starred, page } = this.state;
+
+    const response = await this.loadRepos(page + 1);
+
+    this.setState({ starred: [...starred, ...response.data], page: page + 1 });
+  };
+
+  loadRepos(page = 1) {
     const { navigation } = this.props;
     const user = navigation.getParam('user');
 
-    this.setState({ loading: true });
-
-    const response = await api.get(`/users/${user.login}/starred`);
-
-    this.setState({ starred: response.data, loading: false });
+    return api.get(`/users/${user.login}/starred`, {
+      params: { page },
+    });
   }
 
   render() {
@@ -61,6 +75,8 @@ export default class User extends Component {
           <StarredList
             data={starred}
             keyExtractor={star => star.id.toString()}
+            onEndReachedThreshold={0.3}
+            onEndReached={this.loadMore}
             renderItem={({ item }) => (
               <Starred>
                 <OwnerAvatar source={{ uri: item.owner.avatar_url }} />
