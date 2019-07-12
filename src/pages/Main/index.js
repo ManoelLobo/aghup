@@ -53,6 +53,16 @@ export default class Main extends Component {
   handleAddUser = async () => {
     const { newUser, users } = this.state;
 
+    // TODO implement feedback for duplicate attempt
+    if (
+      users.find(
+        user => user.login.toLowerCase() === newUser.trim().toLowerCase()
+      )
+    ) {
+      this.setState({ newUser: '' });
+      return;
+    }
+
     this.setState({ loading: true });
 
     try {
@@ -67,7 +77,7 @@ export default class Main extends Component {
 
       this.setState({ users: [...users, data], newUser: '', loading: false });
     } catch (err) {
-      // TODO implement feedback
+      // TODO implement feedback for non existent login
     }
 
     this.setState({ newUser: '', loading: false });
