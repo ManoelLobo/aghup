@@ -30,7 +30,7 @@ export default class User extends Component {
     }).isRequired,
   };
 
-  state = { starred: [], loading: true, page: 1 };
+  state = { starred: [], loading: true, page: 1, refreshing: false };
 
   async componentDidMount() {
     this.setState({ loading: true });
@@ -48,6 +48,14 @@ export default class User extends Component {
     this.setState({ starred: [...starred, ...response.data], page: page + 1 });
   };
 
+  refreshList = async () => {
+    this.setState({ refreshing: true });
+
+    const response = await this.loadRepos();
+
+    this.setState({ starred: response.data, refreshing: false, page: 1 });
+  };
+
   loadRepos(page = 1) {
     const { navigation } = this.props;
     const user = navigation.getParam('user');
@@ -58,7 +66,7 @@ export default class User extends Component {
   }
 
   render() {
-    const { starred, loading } = this.state;
+    const { starred, loading, refreshing } = this.state;
     const { navigation } = this.props;
     const user = navigation.getParam('user');
 
@@ -78,6 +86,8 @@ export default class User extends Component {
             keyExtractor={star => star.id.toString()}
             onEndReachedThreshold={0.3}
             onEndReached={this.loadMore}
+            onRefresh={this.refreshList}
+            refreshing={refreshing}
             renderItem={({ item }) => (
               <Starred
                 onPress={() => {
